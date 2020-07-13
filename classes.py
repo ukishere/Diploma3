@@ -14,16 +14,22 @@ class User:
         self.user_token = input('Пройдите по ссылке и введите полученный токен: ')
 
         # Тестовые значения
-        # self.user_id = 594982409
-        # self.user_token = '9549fb2f26d25283106e4b73681d5bf78ad392ce09604b013c668c8672cdf7fbd1953e628fb39d18bdd1d'
+        self.user_id = 594982409
+        self.user_token = '5470a78b929da2f909b8d3b9b91d8ded2432ed5574554c6583e691d8c59df5216ab6723065a7df3201914'
 
     def get_response(self, api_method, params):
         response = requests.get(settings.api_vk_url+api_method, params)
         try:
-            if response.json()['error']['error_code'] == 6:
-                time.sleep(2)
+            if response.json()['error']['error_code'] == 5:
+                print('Ошибка авторизации.')
+                exit()
+            elif response.json()['error']['error_code'] == 6:
+                time.sleep(3)
                 response = requests.get(settings.api_vk_url + api_method, params)
-        finally:
+                return response.json()
+            elif response.json()['error']['error_code'] == 30:
+                return None
+        except KeyError:
             return response.json()
 
     def check_user(self):
@@ -60,7 +66,13 @@ class User:
         except KeyError:
             self.relation = input(f'Пожалуйста введите ваше семейное положение: ')
 
-        self.year = int(self.bdate[:3:-1][::-1])
+        self.year = self.bdate.split('.')
+        try:
+            self.year = int(self.year[2])
+        except IndexError:
+            print('Для работы программы необходимо указать год рождения')
+            exit()
+
         self.age = int(datetime.now().year) - self.year
         if self.age < 18:
             print('18+. Только для взрослых. Расскажи родителям.')
@@ -81,10 +93,13 @@ class User:
 
         victims = []
         response = self.get_response(settings.get_victims_method, settings.get_victims_parameters)
+
         for victim in response['response']['items']:
             try:
                 birth_year = int(victim['bdate'].split('.')[2])
-                if birth_year < self.year - 5 or birth_year > self.year + 5 or (int(datetime.now().year) - birth_year) < 18:
+                if birth_year == None:
+                    continue
+                elif birth_year < self.year - 5 or birth_year > self.year + 5 or (int(datetime.now().year) - birth_year) < 18:
                     continue
             except KeyError:
                 continue
@@ -120,6 +135,9 @@ class User:
         for victim in victims:
             settings.add_victims_photo_parameters['owner_id'] = victim['Vkid']
             response = self.get_response(settings.add_victims_photo_method, settings.add_victims_photo_parameters)
+
+            if response == None:
+                continue
 
             photos_list = []
             for photo in response['response']['items']:

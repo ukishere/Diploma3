@@ -11,6 +11,7 @@ def new_start():
 
     while len(new_victims) < 10:
         victims = client.get_victims(offset)
+        print(victims)
         new_victims.extend(client.check_victims(victims))
         offset += 10
         if offset == 1000:
