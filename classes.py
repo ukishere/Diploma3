@@ -15,7 +15,7 @@ class User:
 
         # Тестовые значения
         self.user_id = 594982409
-        self.user_token = '5470a78b929da2f909b8d3b9b91d8ded2432ed5574554c6583e691d8c59df5216ab6723065a7df3201914'
+        self.user_token = '58a805b8f8a9d44cc9cb4a7f3099b74cb48cb89ce5a4f29d1d3928b6534f74d2c079a9d7dee089306926a'
 
     def get_response(self, api_method, params):
         response = requests.get(settings.api_vk_url+api_method, params)
